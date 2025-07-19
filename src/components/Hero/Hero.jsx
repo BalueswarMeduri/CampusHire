@@ -1,11 +1,20 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { signInWithPopup } from "firebase/auth";
-import { auth, provider } from "../../firebase"; // Adjust the path if needed
+import { auth, provider } from "../../firebase";
+import AOS from "aos";
+import "aos/dist/aos.css";
 
 const Hero = () => {
   const [showModal, setShowModal] = useState(false);
   const navigate = useNavigate();
+
+  useEffect(() => {
+    AOS.init({
+      duration: 1000,
+      once: true,
+    });
+  }, []);
 
   const isLoggedIn = localStorage.getItem("auth");
 
@@ -46,10 +55,14 @@ const Hero = () => {
             backgroundImage:
               'url("https://lh3.googleusercontent.com/aida-public/AB6AXuCXDSrVioR_TH_PpYg3WpL2RRrgVjZ5aapJFEa_AIvYCa_2tjEhERCZ0TDVoVXgq9VS---zgWBu2vepnBY16owNRn_4vqPJBndmzKEur_BjzAKqp87ONO_VO-T6d-JSuYI3TfYMKmBUTYedz8oe9b1aP_kanyENJ5CWfm-GXdx_zqKzZQ1Ucaj-1stgH7DcdNtzN_c5pf0WWLXYz0n7tfZE-o04l_5nYu2enGJdKS3O0le5TSMKLbnxTLzdt6J3prz2YjkER2XDddZn")',
           }}
+          data-aos="fade-up"
         ></div>
 
         {/* ✅ Text & Actions Section */}
-        <div className="flex flex-col gap-6 sm:gap-8 text-center sm:text-left max-w-[600px] w-full">
+        <div
+          className="flex flex-col gap-6 sm:gap-8 text-center sm:text-left max-w-[600px] w-full"
+          data-aos="fade-up"
+        >
           <div className="flex flex-col gap-3">
             <h1 className="text-[#1c180d] text-3xl sm:text-4xl lg:text-5xl font-black leading-tight tracking-[-0.03em]">
               Unlock Your Career Potential with Real Interview Insights
@@ -82,7 +95,10 @@ const Hero = () => {
       {/* ✅ Modal */}
       {showModal && (
         <div className="fixed inset-0 backdrop-blur-sm bg-white/10 flex items-center justify-center z-50 px-4">
-          <div className="bg-white p-4 sm:p-6 rounded-xl w-full max-w-sm shadow-lg text-center space-y-4">
+          <div
+            className="bg-white p-4 sm:p-6 rounded-xl w-full max-w-sm shadow-lg text-center space-y-4"
+            data-aos="zoom-in"
+          >
             <h2 className="text-xl font-semibold text-[#1c180d]">
               Please Log In
             </h2>

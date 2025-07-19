@@ -4,6 +4,8 @@ import { Link } from "react-router-dom";
 import { db } from "../../firebase";
 import { toast, ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
+import AOS from "aos";
+import "aos/dist/aos.css";
 
 const initialState = {
   collage: "",
@@ -30,8 +32,8 @@ const roalOptions = [
 ];
 
 const companyOptions = [
-  "Google", "Microsoft", "Amazon", "Paypal", "TCS","JPMorgan","SAMSUNG", "Infosys", "Wipro", "HCL",
-  "Capgemini", "Deloitte", "Adobe", "Flipkart", "Startup",
+  "Google", "Microsoft", "Amazon", "Paypal", "TCS","JPMorgan","SAMSUNG", "Cognizant" ,"Infosys", "Wipro", "HCL",
+  "Capgemini", "Deloitte", "Adobe", "Flipkart", "others", "Startup",
 ];
 
 const typeOptions = [
@@ -105,6 +107,13 @@ const Post = () => {
     }
   };    
 
+   useEffect(() => {
+            AOS.init({
+              duration: 1000,
+              once: true,
+            });
+          }, []);
+
   return (
     <div className="flex min-h-screen">
       <aside className="hidden sm:block w-52 p-6 border-r border-[#e0dbcf]">
@@ -127,7 +136,7 @@ const Post = () => {
       </aside>
 
       <form onSubmit={handleSubmit} className="mt-20 px-10 py-8 flex-1 flex justify-center">
-        <div className="w-full max-w-[512px]">
+        <div className="w-full max-w-[512px]" data-aos="fade-up">
           <h2 className="text-[#1c180d] text-[28px] font-bold px-4 pb-3">
             Share your interview experience
           </h2>

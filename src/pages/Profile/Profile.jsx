@@ -5,6 +5,8 @@ import { signOut } from "firebase/auth";
 import { doc, getDoc, setDoc } from "firebase/firestore";
 import { toast, ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
+import AOS from "aos";
+import "aos/dist/aos.css";
 
 const Profile = () => {
   const [authInfo, setAuthInfo] = useState(null);
@@ -75,6 +77,13 @@ const Profile = () => {
     }
   };
 
+   useEffect(() => {
+            AOS.init({
+              duration: 1000,
+              once: true,
+            });
+          }, []);
+
   return (
     <div className="flex flex-col md:flex-row min-h-screen mt-12">
       {/* Sidebar for Desktop */}
@@ -122,7 +131,7 @@ const Profile = () => {
           </p>
         </div>
 
-        <div className="flex p-4">
+        <div className="flex p-4" data-aos="fade-up">
           <div className="flex w-full flex-col gap-4 md:flex-row md:justify-between md:items-center">
             <div className="flex gap-4">
               <div
@@ -147,7 +156,7 @@ const Profile = () => {
           Profile Details
         </h2>
 
-        <div className="p-4 grid grid-cols-[30%_1fr] sm:grid-cols-[20%_1fr] gap-x-6">
+        <div className="p-4 grid grid-cols-[30%_1fr] sm:grid-cols-[20%_1fr] gap-x-6" data-aos="fade-down">
           {["College", "Year", "Email", "LinkedIn"].map((label, i) => (
             <div
               key={i}

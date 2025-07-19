@@ -1,13 +1,25 @@
 import { useParams } from "react-router-dom";
-import { doc, getDoc } from "firebase/firestore";
+import { doc, getDoc, collection, onSnapshot, addDoc, deleteDoc, query, where, getDocs } from "firebase/firestore";
 import { useEffect, useState } from "react";
 import { db } from "../../firebase";
 import { assets } from "../../assets/assets";
+import { toast } from "react-toastify";
 
 const Detail = () => {
   const { id } = useParams();
   const [post, setPost] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [authInfo, setAuthInfo] = useState(null);
+  const [likedPosts, setLikedPosts] = useState(new Set());
+  const [likeCounts, setLikeCounts] = useState({});
+  const [loadingLikes, setLoadingLikes] = useState(new Set());
+
+  useEffect(() => {
+    const storedAuth = localStorage.getItem("auth");
+    if (storedAuth) {
+      setAuthInfo(JSON.parse(storedAuth));
+    }
+  }, []);
 
   useEffect(() => {
     const getPost = async () => {
@@ -20,6 +32,149 @@ const Detail = () => {
     };
     getPost();
   }, [id]);
+
+  useEffect(() => {
+    if (authInfo?.userID) {
+      fetchUserLikes();
+    }
+    fetchLikeCounts();
+  }, [authInfo]);
+
+  const fetchUserLikes = async () => {
+    try {
+      const q = query(
+        collection(db, "likes"),
+        where("userId", "==", authInfo.userID)
+      );
+      const querySnapshot = await getDocs(q);
+      const userLikes = new Set();
+      querySnapshot.forEach((doc) => {
+        userLikes.add(doc.data().postId);
+      });
+      setLikedPosts(userLikes);
+    } catch (error) {
+      console.error("Error fetching likes:", error);
+    }
+  };
+
+  const fetchLikeCounts = async () => {
+    try {
+      const querySnapshot = await getDocs(collection(db, "likes"));
+      const counts = {};
+      querySnapshot.forEach((doc) => {
+        const postId = doc.data().postId;
+        counts[postId] = (counts[postId] || 0) + 1;
+      });
+      setLikeCounts(counts);
+    } catch (error) {
+      console.error("Error fetching like counts:", error);
+    }
+  };
+
+  const handleLike = async (postId, e) => {
+    e.stopPropagation();
+    
+    if (!authInfo?.userID) {
+      return;
+    }
+
+    // Add loading state for this specific post
+    setLoadingLikes(prev => new Set([...prev, postId]));
+
+    try {
+      const isLiked = likedPosts.has(postId);
+      
+      if (isLiked) {
+        // Optimistically update UI
+        setLikedPosts(prev => {
+          const newSet = new Set(prev);
+          newSet.delete(postId);
+          return newSet;
+        });
+        setLikeCounts(prev => ({
+          ...prev,
+          [postId]: Math.max((prev[postId] || 1) - 1, 0)
+        }));
+
+        // Remove like from database
+        const q = query(
+          collection(db, "likes"),
+          where("userId", "==", authInfo.userID),
+          where("postId", "==", postId)
+        );
+        const querySnapshot = await getDocs(q);
+        querySnapshot.forEach(async (doc) => {
+          await deleteDoc(doc.ref);
+        });
+      } else {
+        // Optimistically update UI
+        setLikedPosts(prev => new Set([...prev, postId]));
+        setLikeCounts(prev => ({
+          ...prev,
+          [postId]: (prev[postId] || 0) + 1
+        }));
+
+        // Add like to database
+        await addDoc(collection(db, "likes"), {
+          userId: authInfo.userID,
+          postId: postId,
+          timestamp: new Date()
+        });
+      }
+    } catch (error) {
+      console.error("Error handling like:", error);
+      // Revert optimistic updates on error
+      if (likedPosts.has(postId)) {
+        setLikedPosts(prev => {
+          const newSet = new Set(prev);
+          newSet.delete(postId);
+          return newSet;
+        });
+        setLikeCounts(prev => ({
+          ...prev,
+          [postId]: Math.max((prev[postId] || 1) - 1, 0)
+        }));
+      } else {
+        setLikedPosts(prev => new Set([...prev, postId]));
+        setLikeCounts(prev => ({
+          ...prev,
+          [postId]: (prev[postId] || 0) + 1
+        }));
+      }
+    } finally {
+      // Remove loading state
+      setLoadingLikes(prev => {
+        const newSet = new Set(prev);
+        newSet.delete(postId);
+        return newSet;
+      });
+    }
+  };
+
+  const handleShare = async (postId, e) => {
+    e.stopPropagation();
+    
+    try {
+      const currentUrl = window.location.origin;
+      const shareUrl = `${currentUrl}/detail/${postId}`;
+      
+      await navigator.clipboard.writeText(shareUrl);
+      toast.success("Link copied to clipboard!", {
+        position: "top-right",
+        autoClose: 2000,
+        hideProgressBar: false,
+        closeOnClick: true,
+        pauseOnHover: true,
+        draggable: true,
+      });
+    } catch (error) {
+      console.error("Error copying to clipboard:", error);
+      toast.error("Failed to copy link", {
+        position: "top-right",
+        autoClose: 2000,
+      });
+    }
+  };
 
   if (loading) {
     return (
@@ -89,6 +244,63 @@ const Detail = () => {
                   {post.collage}
                 </p>
               </div>
+            </div>
+            
+            {/* Like and Share buttons - Desktop: grouped together, Mobile: spread apart */}
+            <div className="flex pt-5 justify-between sm:justify-center sm:gap-4 w-full sm:w-auto">
+              {/* Like Button */}
+              <div className="flex items-center">
+                <button
+                  onClick={(e) => handleLike(id, e)}
+                  disabled={loadingLikes.has(id)}
+                  className={`p-2 rounded-full cursor-pointer transition-all duration-200 transform active:scale-95 hover:scale-105 ${
+                    likedPosts.has(id) ? 'bg-[#fac638]/10' : 'hover:bg-gray-100'
+                  } ${loadingLikes.has(id) ? 'opacity-50 cursor-not-allowed' : ''}`}
+                >
+                  <svg
+                    width="20"
+                    height="20"
+                    viewBox="0 0 24 24"
+                    fill={likedPosts.has(id) ? "#fac638" : "none"}
+                    stroke={likedPosts.has(id) ? "#fac638" : "#9e8747"}
+                    strokeWidth="2"
+                    className={`transition-all duration-200 ${
+                      loadingLikes.has(id) ? 'animate-pulse' : ''
+                    } ${likedPosts.has(id) ? 'drop-shadow-sm' : ''}`}
+                  >
+                    <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/>
+                  </svg>
+                </button>
+                {likeCounts[id] > 0 && (
+                  <span className={`text-xs font-medium transition-all duration-200 ${
+                    likedPosts.has(id) ? 'text-[#fac638]' : 'text-[#9e8747]'
+                  }`}>
+                    {likeCounts[id]}
+                  </span>
+                )}
+              </div>
+               
+              {/* Share Button */}
+              <button
+                onClick={(e) => handleShare(id, e)}
+                className="p-2 rounded-full cursor-pointer transition-all duration-200 transform active:scale-95 hover:scale-105 hover:bg-gray-100"
+              >
+                <svg
+                  width="18"
+                  height="18"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="#9e8747"
+                  strokeWidth="2"
+                  className="transition-all duration-200"
+                >
+                  <circle cx="18" cy="5" r="3"/>
+                  <circle cx="6" cy="12" r="3"/>
+                  <circle cx="18" cy="19" r="3"/>
+                  <line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/>
+                  <line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/>
+                </svg>
+              </button>
             </div>
           </div>
         </div>

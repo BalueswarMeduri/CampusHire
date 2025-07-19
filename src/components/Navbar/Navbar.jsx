@@ -4,7 +4,7 @@ import { NavLink } from "react-router-dom";
 import { auth, provider } from "../../firebase";
 import { useNavigate } from "react-router-dom";
 import { useLocation } from "react-router-dom";
-
+import { toast } from "react-toastify";
 
 const Navbar = ({ active, setActive }) => {
   const location = useLocation();
@@ -22,15 +22,16 @@ const Navbar = ({ active, setActive }) => {
   }, []);
 
   useEffect(() => {
-  if (location.pathname.startsWith("/explore")) {
-    setActive("explore");
-  } else if (location.pathname.startsWith("/about")) {
-    setActive("about");
-  } else {
-    setActive("home");
-  }
-}, [location.pathname]);
-
+    if (location.pathname.startsWith("/explore")) {
+      setActive("explore");
+    } else if (location.pathname.startsWith("/about")) {
+      setActive("about");
+    } else if(location.pathname.startsWith("/resources")){
+      setActive("resources");
+    } else {
+      setActive("home");
+    }
+  }, [location.pathname]);
 
   const getLinkClass = (name) =>
     `text-sm font-medium leading-normal ${
@@ -49,6 +50,7 @@ const Navbar = ({ active, setActive }) => {
       };
       localStorage.setItem("auth", JSON.stringify(userData));
       setAuthInfo(userData);
+      window.location.reload();
     } catch (error) {
       console.error("Login failed:", error);
     }
@@ -61,9 +63,25 @@ const Navbar = ({ active, setActive }) => {
     }
   };
 
+  const showToast = (message) => {
+    toast.error(message);
+  };
+
+  const handleProtectedNavigation = (path, linkName) => {
+    if (!authInfo?.isAuth) {
+      showToast("Please login to access this page");
+      return;
+    }
+    navigate(path);
+    setActive(linkName);
+    setMenuOpen(false);
+  };
+
+  
+
   return (
     <div className="fixed left-0 right-0 top-0 z-50">
-      <header className="border-b border-solid border-b-[#f4f0e6] px-4 md:px-10 py-3 bg-[#fafafae2]">
+      <header className="border-b border-solid border-b-[#f4f0e6] px-4 md:px-10 py-3 bg-[#fafafafc]">
         <div className="flex items-center justify-between">
           {/* Logo & Links */}
           <div className="flex items-center gap-8">
@@ -87,9 +105,24 @@ const Navbar = ({ active, setActive }) => {
               </NavLink>
             </div>
             <div className="hidden md:flex items-center gap-9">
-              <NavLink to="/" className={getLinkClass("home")}>Home</NavLink>
-              <NavLink to="/explore" className={getLinkClass("explore")}>Explore</NavLink>
-              <NavLink to="/about" className={getLinkClass("about")}>About</NavLink>
+              <NavLink to="/" className={getLinkClass("home")}>
+                Home
+              </NavLink>
+              <button
+                onClick={() => handleProtectedNavigation("/explore", "explore")}
+                className={getLinkClass("explore") + " cursor-pointer"}
+              >
+                Explore
+              </button>
+              <button
+                onClick={() => handleProtectedNavigation("/resources", "resources")}
+                className={getLinkClass("resources") + " cursor-pointer"}
+              >
+                Resources
+              </button>
+              <NavLink to="/about" className={getLinkClass("about")}>
+                About
+              </NavLink>
             </div>
           </div>
 
@@ -170,21 +203,32 @@ const Navbar = ({ active, setActive }) => {
           <div className="md:hidden mt-4 flex flex-col gap-4">
             <NavLink
               to="/"
-              onClick={() => setActive("home")}
+              onClick={() => {
+                setActive("home");
+                setMenuOpen(false);
+              }}
               className={getLinkClass("home")}
             >
               Home
             </NavLink>
-            <NavLink
-              to="/explore"
-              onClick={() => setActive("explore")}
-              className={getLinkClass("explore")}
+            <button
+              onClick={() => handleProtectedNavigation("/explore", "explore")}
+              className={getLinkClass("explore") + " text-left cursor-pointer"}
             >
               Explore
-            </NavLink>
+            </button>
+            <button
+              onClick={() => handleProtectedNavigation("/resources", "resources")}
+              className={getLinkClass("resources") + " text-left cursor-pointer"}
+            >
+              Resources
+            </button>
             <NavLink
               to="/about"
-              onClick={() => setActive("about")}
+              onClick={() => {
+                setActive("about");
+                setMenuOpen(false);
+              }}
               className={getLinkClass("about")}
             >
               About
@@ -213,13 +257,16 @@ const Navbar = ({ active, setActive }) => {
 
             {!authInfo?.isAuth ? (
               <button
-                onClick={signWithgoogle}
+                onClick={() => {
+                  signWithgoogle();
+                  setMenuOpen(false);
+                }}
                 className="min-w-[84px] h-10 px-4 bg-[#fac638] text-[#1c180d] text-sm font-bold rounded-lg cursor-pointer"
               >
                 <span className="truncate">Sign Up</span>
               </button>
             ) : (
-              <NavLink to="/profile">
+              <NavLink to="/profile" onClick={() => setMenuOpen(false)}>
                 <img
                   src={authInfo.profilePhoto}
                   alt={authInfo.name}

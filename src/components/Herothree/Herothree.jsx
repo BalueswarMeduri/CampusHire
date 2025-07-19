@@ -1,6 +1,14 @@
-import React from "react";
+import React, { useEffect } from "react";
+import AOS from "aos";
+import "aos/dist/aos.css";
 
 const Herothree = () => {
+  useEffect(() => {
+        AOS.init({
+          duration: 1000,
+          once: true,
+        });
+      }, []);
   return (
     <div className="max-w-[1010px] mx-auto px-4 mt-28">
       <h2 className="text-[#1c180d] text-[22px] font-bold leading-tight tracking-[-0.015em] px-4 pb-3 pt-5">
@@ -11,7 +19,7 @@ const Herothree = () => {
       <div className="flex flex-col sm:flex-row sm:overflow-x-auto [-ms-scrollbar-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
         <div className="flex flex-col sm:flex-row items-stretch p-4 gap-4 w-full">
           {/* Card 1 */}
-          <div className="flex flex-col gap-4 rounded-lg sm:min-w-[280px] w-full">
+          <div className="flex flex-col gap-4 rounded-lg sm:min-w-[280px] w-full" data-aos="fade-up">
             <div
               className="w-full bg-center bg-no-repeat aspect-video bg-cover rounded-xl"
               style={{
@@ -30,7 +38,7 @@ const Herothree = () => {
           </div>
 
           {/* Card 2 */}
-          <div className="flex flex-col gap-4 rounded-lg sm:min-w-[280px] w-full">
+          <div className="flex flex-col gap-4 rounded-lg sm:min-w-[280px] w-full" data-aos="fade-up">
             <div
               className="w-full bg-center bg-no-repeat aspect-video bg-cover rounded-xl"
               style={{
@@ -49,7 +57,7 @@ const Herothree = () => {
           </div>
 
           {/* Card 3 */}
-          <div className="flex flex-col gap-4 rounded-lg sm:min-w-[280px] w-full">
+          <div className="flex flex-col gap-4 rounded-lg sm:min-w-[280px] w-full" data-aos="fade-up">
             <div
               className="w-full bg-center bg-no-repeat aspect-video bg-cover rounded-xl"
               style={{

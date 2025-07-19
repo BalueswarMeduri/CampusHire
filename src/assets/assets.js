@@ -13,6 +13,8 @@ import TCS from './TCS.jpeg'
 import Wipro from './Wipro.jpeg'
 import Startup from './Startup.jpeg'
 import Deloitte from './Deloitte.jpeg'
+import Cognizant from './Cognizant.jpeg'
+import other from './other.jpg'
 
 export const assets = {
     Amazon,
@@ -30,4 +32,6 @@ export const assets = {
     Wipro,
     Startup,
     Deloitte,
+    Cognizant,
+    other
 }

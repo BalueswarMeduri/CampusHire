@@ -3,6 +3,7 @@ import Hero from '../../components/Hero/Hero'
 import Herotwo from '../../components/Herotwo/Herotwo'
 import Herothree from '../../components/Herothree/Herothree'
 import Herofour from '../../components/Herofour/Herofour'
+import Herofive from '../../components/Herofive/Herofive'
 
 
 const Homepage = () => {
@@ -12,6 +13,7 @@ const Homepage = () => {
         <Herotwo/>
         <Herothree/>
         <Herofour/>
+        <Herofive/>
     </div>
   )
 }
