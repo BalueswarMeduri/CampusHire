@@ -28,7 +28,8 @@ const Navbar = ({ active, setActive }) => {
       setActive("about");
     } else if(location.pathname.startsWith("/resources")){
       setActive("resources");
-    } else {
+    } else if (location.pathname.startsWith("/practice")){
+    }else {
       setActive("home");
     }
   }, [location.pathname]);
@@ -113,6 +114,12 @@ const Navbar = ({ active, setActive }) => {
                 className={getLinkClass("explore") + " cursor-pointer"}
               >
                 Explore
+              </button>
+              <button
+                onClick={() => handleProtectedNavigation("/practice", "practice")}
+                className={getLinkClass("practice") + " cursor-pointer"}
+              >
+                Practice
               </button>
               <button
                 onClick={() => handleProtectedNavigation("/resources", "resources")}

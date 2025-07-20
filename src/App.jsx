@@ -13,6 +13,7 @@ import Footer from "./components/Footer/Footer";
 import Resourse from "./pages/Resourse/Resourse";
 import { ToastContainer } from "react-toastify";
 import ProtectedRoute from "./components/ProtectedRoute/ProtectedRoute";
+import Practice from "./pages/Practice/Practice";
 
 const App = () => {
   const [active, setActive] = useState("home");
@@ -31,6 +32,15 @@ const App = () => {
             element={
               <ProtectedRoute>
                 <Explore />
+              </ProtectedRoute>
+            }
+          />
+
+          <Route
+            path="/practice"
+            element={
+              <ProtectedRoute>
+                <Practice />
               </ProtectedRoute>
             }
           />

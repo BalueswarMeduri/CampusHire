@@ -2,17 +2,20 @@ import React, { useEffect, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { auth, db } from "../../firebase";
 import { signOut } from "firebase/auth";
-import { doc, getDoc, setDoc } from "firebase/firestore";
+import { doc, getDoc, setDoc, collection, query, where, orderBy, getDocs } from "firebase/firestore";
 import { toast, ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 import AOS from "aos";
 import "aos/dist/aos.css";
+import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
 
 const Profile = () => {
   const [authInfo, setAuthInfo] = useState(null);
   const [userProfile, setUserProfile] = useState(null);
   const [form, setForm] = useState({});
   const [isEditing, setIsEditing] = useState(false);
+  const [typingSessions, setTypingSessions] = useState([]);
+  const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -21,6 +24,7 @@ const Profile = () => {
       const parsed = JSON.parse(storedAuth);
       setAuthInfo(parsed);
       fetchUserProfile(parsed.userID);
+      fetchTypingSessions(parsed.userID);
     }
   }, []);
 
@@ -42,6 +46,41 @@ const Profile = () => {
       };
       setUserProfile(initialData);
       setForm(initialData);
+    }
+  };
+
+  const fetchTypingSessions = async (userId) => {
+    setLoading(true);
+    try {
+      // Simplified query - only filter by userId, sort in JavaScript
+      const q = query(
+        collection(db, "typing-sessions"),
+        where("userId", "==", userId)
+      );
+      const querySnapshot = await getDocs(q);
+      const sessions = [];
+      
+      querySnapshot.forEach((doc) => {
+        const data = doc.data();
+        sessions.push({
+          id: doc.id,
+          ...data,
+          // Format timestamp for display
+          date: data.timestamp?.toDate?.() || new Date(data.timestamp),
+          dateString: data.timestamp?.toDate?.()?.toLocaleDateString() || new Date(data.timestamp).toLocaleDateString()
+        });
+      });
+      
+      // Sort by date (oldest first) and take last 20 sessions for better visualization
+      const sortedSessions = sessions
+        .sort((a, b) => a.date - b.date)
+        .slice(-20);
+      setTypingSessions(sortedSessions);
+    } catch (error) {
+      console.error("Error fetching typing sessions:", error);
+      toast.error("Failed to load typing sessions!");
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -77,12 +116,40 @@ const Profile = () => {
     }
   };
 
-   useEffect(() => {
-            AOS.init({
-              duration: 1000,
-              once: true,
-            });
-          }, []);
+  useEffect(() => {
+    AOS.init({
+      duration: 1000,
+      once: true,
+    });
+  }, []);
+
+  // Calculate statistics
+  const getTypingStats = () => {
+    if (typingSessions.length === 0) return { avgWpm: 0, avgAccuracy: 0, bestWpm: 0, bestAccuracy: 0, totalSessions: 0 };
+    
+    const totalWpm = typingSessions.reduce((sum, session) => sum + (session.wpm || 0), 0);
+    const totalAccuracy = typingSessions.reduce((sum, session) => sum + (session.accuracy || 0), 0);
+    const bestWpm = Math.max(...typingSessions.map(s => s.wpm || 0));
+    const bestAccuracy = Math.max(...typingSessions.map(s => s.accuracy || 0));
+    
+    return {
+      avgWpm: Math.round(totalWpm / typingSessions.length),
+      avgAccuracy: Math.round((totalAccuracy / typingSessions.length) * 10) / 10,
+      bestWpm,
+      bestAccuracy: Math.round(bestAccuracy * 10) / 10,
+      totalSessions: typingSessions.length
+    };
+  };
+
+  const stats = getTypingStats();
+
+  // Prepare chart data
+  const chartData = typingSessions.map((session, index) => ({
+    session: `Session ${index + 1}`,
+    date: session.dateString,
+    wpm: session.wpm || 0,
+    accuracy: session.accuracy || 0,
+  }));
 
   return (
     <div className="flex flex-col md:flex-row min-h-screen mt-12">
@@ -174,6 +241,123 @@ const Profile = () => {
           ))}
         </div>
 
+        {/* Typing Analytics Section */}
+        <h2 className="text-[#1c180d] text-[22px] font-bold leading-tight tracking-[-0.015em] px-4 pb-3 pt-8">
+          Typing Analytics
+        </h2>
+
+        {loading ? (
+          <div className="flex justify-center items-center p-8">
+            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-yellow-500"></div>
+          </div>
+        ) : typingSessions.length > 0 ? (
+          <>
+            {/* Statistics Cards */}
+            <div className="grid grid-cols-2 md:grid-cols-5 gap-4 p-4 mb-6" data-aos="fade-up">
+              <div className="bg-[#fcfbf8] border border-[#e9e2ce] rounded-lg p-4 text-center">
+                <p className="text-[#9e8747] text-sm font-medium">Total Sessions</p>
+                <p className="text-[#1c180d] text-2xl font-bold">{stats.totalSessions}</p>
+              </div>
+              <div className="bg-[#fcfbf8] border border-[#e9e2ce] rounded-lg p-4 text-center">
+                <p className="text-[#9e8747] text-sm font-medium">Avg WPM</p>
+                <p className="text-[#1c180d] text-2xl font-bold">{stats.avgWpm}</p>
+              </div>
+              <div className="bg-[#fcfbf8] border border-[#e9e2ce] rounded-lg p-4 text-center">
+                <p className="text-[#9e8747] text-sm font-medium">Best WPM</p>
+                <p className="text-[#1c180d] text-2xl font-bold">{stats.bestWpm}</p>
+              </div>
+              <div className="bg-[#fcfbf8] border border-[#e9e2ce] rounded-lg p-4 text-center">
+                <p className="text-[#9e8747] text-sm font-medium">Avg Accuracy</p>
+                <p className="text-[#1c180d] text-2xl font-bold">{stats.avgAccuracy}%</p>
+              </div>
+              <div className="bg-[#fcfbf8] border border-[#e9e2ce] rounded-lg p-4 text-center">
+                <p className="text-[#9e8747] text-sm font-medium">Best Accuracy</p>
+                <p className="text-[#1c180d] text-2xl font-bold">{stats.bestAccuracy}%</p>
+              </div>
+            </div>
+
+            {/* WPM Chart */}
+            <div className="bg-[#fcfbf8] border border-[#e9e2ce] rounded-lg p-6 mb-6" data-aos="fade-up">
+              <h3 className="text-[#1c180d] text-lg font-semibold mb-4">Words Per Minute (WPM) Progress</h3>
+              <ResponsiveContainer width="100%" height={300}>
+                <LineChart data={chartData}>
+                  <CartesianGrid strokeDasharray="3 3" stroke="#e9e2ce" />
+                  <XAxis 
+                    dataKey="session" 
+                    stroke="#9e8747"
+                    fontSize={12}
+                    tick={{ fill: '#9e8747' }}
+                  />
+                  <YAxis 
+                    stroke="#9e8747"
+                    fontSize={12}
+                    tick={{ fill: '#9e8747' }}
+                  />
+                  <Tooltip 
+                    contentStyle={{ 
+                      backgroundColor: '#fcfbf8', 
+                      border: '1px solid #e9e2ce',
+                      borderRadius: '8px'
+                    }}
+                    labelStyle={{ color: '#1c180d' }}
+                  />
+                  <Line 
+                    type="monotone" 
+                    dataKey="wpm" 
+                    stroke="#eab308" 
+                    strokeWidth={3}
+                    dot={{ fill: '#eab308', strokeWidth: 2, r: 4 }}
+                    activeDot={{ r: 6, stroke: '#eab308', strokeWidth: 2 }}
+                  />
+                </LineChart>
+              </ResponsiveContainer>
+            </div>
+
+            {/* Accuracy Chart */}
+            <div className="bg-[#fcfbf8] border border-[#e9e2ce] rounded-lg p-6 mb-6" data-aos="fade-up">
+              <h3 className="text-[#1c180d] text-lg font-semibold mb-4">Accuracy Progress</h3>
+              <ResponsiveContainer width="100%" height={300}>
+                <LineChart data={chartData}>
+                  <CartesianGrid strokeDasharray="3 3" stroke="#e9e2ce" />
+                  <XAxis 
+                    dataKey="session" 
+                    stroke="#9e8747"
+                    fontSize={12}
+                    tick={{ fill: '#9e8747' }}
+                  />
+                  <YAxis 
+                    domain={[0, 100]}
+                    stroke="#9e8747"
+                    fontSize={12}
+                    tick={{ fill: '#9e8747' }}
+                  />
+                  <Tooltip 
+                    contentStyle={{ 
+                      backgroundColor: '#fcfbf8', 
+                      border: '1px solid #e9e2ce',
+                      borderRadius: '8px'
+                    }}
+                    labelStyle={{ color: '#1c180d' }}
+                    formatter={(value) => [`${value}%`, 'Accuracy']}
+                  />
+                  <Line 
+                    type="monotone" 
+                    dataKey="accuracy" 
+                    stroke="#22c55e" 
+                    strokeWidth={3}
+                    dot={{ fill: '#22c55e', strokeWidth: 2, r: 4 }}
+                    activeDot={{ r: 6, stroke: '#22c55e', strokeWidth: 2 }}
+                  />
+                </LineChart>
+              </ResponsiveContainer>
+            </div>
+          </>
+        ) : (
+          <div className="bg-[#fcfbf8] border border-[#e9e2ce] rounded-lg p-8 text-center" data-aos="fade-up">
+            <p className="text-[#9e8747] text-lg">No typing sessions found. Start typing to see your progress!</p>
+          </div>
+        )}
+
         {/* Action Buttons */}
         <div className="flex justify-center gap-4 mt-6">
           <button
@@ -193,52 +377,51 @@ const Profile = () => {
 
       {/* Modal */}
       {isEditing && (
-  <div className="fixed inset-0 z-50 flex items-center justify-center bg-white/10 backdrop-blur-sm p-4">
-    <div className="bg-[#fcfbf8] rounded-lg shadow-lg w-full max-w-md sm:max-w-sm p-5 sm:p-6">
-      <h3 className="text-lg sm:text-xl font-bold text-center mb-4 text-yellow-400">
-        Edit Profile
-      </h3>
-      <div className="flex flex-col gap-3">
-        <input
-          name="college"
-          value={form.college}
-          onChange={handleChange}
-          placeholder="College"
-          className="border p-2 rounded w-full"
-        />
-        <input
-          name="year"
-          value={form.year}
-          onChange={handleChange}
-          placeholder="Year"
-          className="border p-2 rounded w-full"
-        />
-        <input
-          name="linkedin"
-          value={form.linkedin}
-          onChange={handleChange}
-          placeholder="LinkedIn URL"
-          className="border p-2 rounded w-full"
-        />
-        <div className="flex flex-col sm:flex-row justify-end gap-2 mt-4">
-          <button
-            onClick={() => setIsEditing(false)}
-            className="bg-[#ebeae3d6] hover:bg-gray-50 text-black px-4 py-2 rounded cursor-pointer w-full sm:w-auto"
-          >
-            Cancel
-          </button>
-          <button
-            onClick={handleSave}
-            className="bg-yellow-500 hover:bg-yellow-600 text-white px-4 py-2 rounded cursor-pointer w-full sm:w-auto"
-          >
-            Save
-          </button>
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-white/10 backdrop-blur-sm p-4">
+          <div className="bg-[#fcfbf8] rounded-lg shadow-lg w-full max-w-md sm:max-w-sm p-5 sm:p-6">
+            <h3 className="text-lg sm:text-xl font-bold text-center mb-4 text-yellow-400">
+              Edit Profile
+            </h3>
+            <div className="flex flex-col gap-3">
+              <input
+                name="college"
+                value={form.college}
+                onChange={handleChange}
+                placeholder="College"
+                className="border p-2 rounded w-full"
+              />
+              <input
+                name="year"
+                value={form.year}
+                onChange={handleChange}
+                placeholder="Year"
+                className="border p-2 rounded w-full"
+              />
+              <input
+                name="linkedin"
+                value={form.linkedin}
+                onChange={handleChange}
+                placeholder="LinkedIn URL"
+                className="border p-2 rounded w-full"
+              />
+              <div className="flex flex-col sm:flex-row justify-end gap-2 mt-4">
+                <button
+                  onClick={() => setIsEditing(false)}
+                  className="bg-[#ebeae3d6] hover:bg-gray-50 text-black px-4 py-2 rounded cursor-pointer w-full sm:w-auto"
+                >
+                  Cancel
+                </button>
+                <button
+                  onClick={handleSave}
+                  className="bg-yellow-500 hover:bg-yellow-600 text-white px-4 py-2 rounded cursor-pointer w-full sm:w-auto"
+                >
+                  Save
+                </button>
+              </div>
+            </div>
+          </div>
         </div>
-      </div>
-    </div>
-  </div>
-)}
-
+      )}
 
       <ToastContainer position="top-right" autoClose={3000} />
     </div>
