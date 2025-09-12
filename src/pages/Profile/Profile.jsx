@@ -241,7 +241,7 @@ const Profile = () => {
           ))}
         </div>
 
-        {/* Typing Analytics Section */}
+        {/* Typing Analytics Section 
         <h2 className="text-[#1c180d] text-[22px] font-bold leading-tight tracking-[-0.015em] px-4 pb-3 pt-8">
           Typing Analytics
         </h2>
@@ -252,7 +252,6 @@ const Profile = () => {
           </div>
         ) : typingSessions.length > 0 ? (
           <>
-            {/* Statistics Cards */}
             <div className="grid grid-cols-2 md:grid-cols-5 gap-4 p-4 mb-6" data-aos="fade-up">
               <div className="bg-[#fcfbf8] border border-[#e9e2ce] rounded-lg p-4 text-center">
                 <p className="text-[#9e8747] text-sm font-medium">Total Sessions</p>
@@ -274,9 +273,9 @@ const Profile = () => {
                 <p className="text-[#9e8747] text-sm font-medium">Best Accuracy</p>
                 <p className="text-[#1c180d] text-2xl font-bold">{stats.bestAccuracy}%</p>
               </div>
-            </div>
+            </div>*/}
 
-            {/* WPM Chart */}
+            {/* WPM Chart 
             <div className="bg-[#fcfbf8] border border-[#e9e2ce] rounded-lg p-6 mb-6" data-aos="fade-up">
               <h3 className="text-[#1c180d] text-lg font-semibold mb-4">Words Per Minute (WPM) Progress</h3>
               <ResponsiveContainer width="100%" height={300}>
@@ -311,9 +310,9 @@ const Profile = () => {
                   />
                 </LineChart>
               </ResponsiveContainer>
-            </div>
+            </div>*/}
 
-            {/* Accuracy Chart */}
+            {/* Accuracy Chart 
             <div className="bg-[#fcfbf8] border border-[#e9e2ce] rounded-lg p-6 mb-6" data-aos="fade-up">
               <h3 className="text-[#1c180d] text-lg font-semibold mb-4">Accuracy Progress</h3>
               <ResponsiveContainer width="100%" height={300}>
@@ -356,7 +355,7 @@ const Profile = () => {
           <div className="bg-[#fcfbf8] border border-[#e9e2ce] rounded-lg p-8 text-center" data-aos="fade-up">
             <p className="text-[#9e8747] text-lg">No typing sessions found. Start typing to see your progress!</p>
           </div>
-        )}
+        )}*/}
 
         {/* Action Buttons */}
         <div className="flex justify-center gap-4 mt-6">

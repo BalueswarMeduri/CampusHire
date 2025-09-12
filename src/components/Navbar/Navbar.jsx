@@ -115,12 +115,12 @@ const Navbar = ({ active, setActive }) => {
               >
                 Explore
               </button>
-              <button
+              {/*<button
                 onClick={() => handleProtectedNavigation("/practice", "practice")}
                 className={getLinkClass("practice") + " cursor-pointer"}
               >
                 Practice
-              </button>
+              </button>*/}
               <button
                 onClick={() => handleProtectedNavigation("/resources", "resources")}
                 className={getLinkClass("resources") + " cursor-pointer"}
