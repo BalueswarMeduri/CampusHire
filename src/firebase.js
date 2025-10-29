@@ -10,18 +10,18 @@ import { getFirestore } from "firebase/firestore"; // ✅ fixed import
 
 // Your Firebase configuration
 const firebaseConfig = {
-  apiKey: "AIzaSyA43kE4eLYN-fABW-S0dzF0kZ9G0n0F5kM",
-  authDomain: "campushire-ee451.firebaseapp.com",
-  projectId: "campushire-ee451",
-  storageBucket: "campushire-ee451.appspot.com", // ✅ corrected domain
-  messagingSenderId: "662213154532",
-  appId: "1:662213154532:web:c38964aba4161436b6bef1",
-  measurementId: "G-HGQMN9JWZE"
+  apiKey: import.meta.env.VITE_FIREBASE_API_KEY,
+  authDomain: import.meta.env.VITE_FIREBASE_AUTH_DOMAIN,
+  projectId: import.meta.env.VITE_FIREBASE_PROJECT_ID,
+  storageBucket: import.meta.env.VITE_FIREBASE_STORAGE_BUCKET,
+  messagingSenderId: import.meta.env.VITE_FIREBASE_MESSAGING_SENDER_ID,
+  appId: import.meta.env.VITE_FIREBASE_APP_ID,
+  measurementId: import.meta.env.VITE_FIREBASE_MEASUREMENT_ID
 };
 
 // Initialize Firebase
 const app = initializeApp(firebaseConfig);
-const analytics = getAnalytics(app); // Optional: Only if used
+const analytics = typeof window !== "undefined" && firebaseConfig.measurementId ? getAnalytics(app) : null; // Optional
 
 // Exports
 export const auth = getAuth(app);
