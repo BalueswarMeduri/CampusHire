@@ -72,7 +72,7 @@ index.js → Entry point
 
 ## 🧑‍💼 Project Status
 
-- ✅ Currently live with **300+ active users**
+- ✅ Currently live with **600+ active users**
 - ✅ Fully functional with posting, filtering, and reading
 - 🧪 Continuously adding new features based on user feedback
 
