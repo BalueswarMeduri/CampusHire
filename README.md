@@ -2,7 +2,7 @@
 
 **CampusHire** is a peer-to-peer placement preparation platform designed to help university students share and explore real interview experiences. Built with React and Firebase, the platform is focused on community-driven insights to guide students through their placement journey.
 
-🔗 Live Website: [https://campushire-ee451.web.app](https://campushire-ee451.web.app)
+🔗 Live Website: [https://campushire-ee451.web.app](https://campushire-ee451.web.app) 
 
 ---
 
